@@ -56,19 +56,26 @@ ifeq ($(CONFIG_SUPPORT_OPENWRT),y)
 ccflags-y += -DCONFIG_SUPPORT_OPENWRT
 endif
 
+ifeq ($(srctree),)
+    srctree := $(PWD)/kernel-5.15
+endif
+
 ifndef TOP
     TOP := $(srctree)/..
 endif
+
+src := $(TOP)/vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m
+
 $(info os option: $(os))
 
 # script for check the kernel version condition
 # example check kernel >= 5.4 : $(call kver_ge,5,4)
-kver_ge = $(shell \
-echo check_ver | awk '{if($(VERSION) < $(1)) {print 0} else { \
-if($(VERSION) > $(1)) {print 1} else { \
-if($(PATCHLEVEL) < $(2)) {print 0} else {print 1} \
-}}}' \
-)
+kver_ge := 5,15
+#kver_ge = $(shell \
+#  if [ $(VERSION) -gt $(1) ]; then echo 1; \
+#  elif [ $(VERSION) -eq $(1) ] && [ $(PATCHLEVEL) -ge $(2) ]; then echo 1; \
+#  else echo 0; fi \
+#)
 
 # ---------------------------------------------------
 # ALPS Setting
@@ -1304,6 +1311,7 @@ else
     ccflags-y += -DCFG_MTK_WIFI_AER_L05_RESET=0
 endif
 
+MODULE_NAME := wlan_drv_gen4m_$(WLAN_CHIP_ID)
 ifeq ($(MODULE_NAME),)
 MODULE_NAME := wlan_$(shell echo $(strip $(WLAN_CHIP_ID)) | tr A-Z a-z)_$(CONFIG_MTK_COMBO_WIFI_HIF)
 endif
@@ -1975,3 +1983,17 @@ ifeq ($(WMT_SUPPORT), y)
 else
     ccflags-y += -Wframe-larger-than=2048
 endif
+
+
+extra_symbols := $(abspath $(O)/../vendor/mediatek/kernel_modules/connectivity/conninfra/Module.symvers)
+extra_symbols += $(abspath $(O)/../vendor/mediatek/kernel_modules/connectivity/connfem/Module.symvers)
+extra_symbols += $(abspath $(O)/../vendor/mediatek/kernel_modules/connectivity/wlan/adaptor/Module.symvers)
+
+all:
+	$(MAKE) -C $(KERNEL_SRC) M=$(M) modules $(KBUILD_OPTIONS) KBUILD_EXTRA_SYMBOLS="$(extra_symbols)"
+
+modules_install:
+	$(MAKE) M=$(M) -C $(KERNEL_SRC) modules_install
+
+clean:
+	$(MAKE) -C $(KERNEL_SRC) M=$(M) clean

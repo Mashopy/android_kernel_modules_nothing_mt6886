@@ -11,6 +11,8 @@ ifndef TOP
     TOP := $(srctree)/..
 endif
 
+src := $(TOP)/vendor/mediatek/kernel_modules/connectivity/bt/mt66xx/btif
+
 ifneq ($(KERNEL_OUT),)
     ccflags-y += -imacros $(KERNEL_OUT)/include/generated/autoconf.h
 endif
@@ -121,3 +123,15 @@ HIF_OBJS := btmtk_btif_main.o btmtk_queue.o
 $(MODULE_NAME)-objs  += $(CORE_OBJS)
 $(MODULE_NAME)-objs  += $(HIF_OBJS)
 $(MODULE_NAME)-objs  += $(CHIP_OBJS)
+
+extra_symbols := $(abspath $(O)/../vendor/mediatek/kernel_modules/connectivity/conninfra/Module.symvers)
+extra_symbols += $(abspath $(O)/../vendor/mediatek/kernel_modules/connectivity/connfem/Module.symvers)
+
+all:
+	$(MAKE) -C $(KERNEL_SRC) M=$(M) modules $(KBUILD_OPTIONS) KBUILD_EXTRA_SYMBOLS="$(extra_symbols)"
+
+modules_install:
+	$(MAKE) M=$(M) -C $(KERNEL_SRC) modules_install
+
+clean:
+	$(MAKE) -C $(KERNEL_SRC) M=$(M) clean

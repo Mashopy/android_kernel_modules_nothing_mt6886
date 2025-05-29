@@ -1,0 +1,10 @@
+ccflags-y += \
+	     -I$(srctree)/include/ \
+
+obj-m += msync2_frd.o
+msync2_frd-y += src/msync2_main.o
+
+KO_CODE_PATH := $(if $(filter /%,$(src)),,$(srctree)/)$(src)
+REL_PREBUILT_O_PATH := $(shell bash $(srctree)/scripts/get_rel_path.sh $(KO_CODE_PATH) $(obj))
+
+msync2_frd-y += $(REL_PREBUILT_O_PATH)/src/mtk_disp_msync.o
